@@ -11,10 +11,10 @@ if api_key is None:
     raise RuntimeError("Openrouter API Key not found in .env file.")
 
 
-def format_response(text: str) -> str:
+def format_text(text: str) -> str:
     words: list[str] = text.split()
     if not words:
-        return ""
+        return text
 
     lines: list[str] = []
     current_line: list[str] = []
@@ -58,13 +58,13 @@ def main():
         print(f"Prompt tokens: {response.usage.prompt_tokens}")
         print(f"Response tokens: {response.usage.completion_tokens}")
         print("User prompt:")
-        print(format_response(args.user_prompt))
+        print(format_text(args.user_prompt))
 
     if response.choices[0].message.content is None:
         print("Response empty!")
     else:
         print("Response:")
-        print(format_response(response.choices[0].message.content))
+        print(format_text(response.choices[0].message.content))
 
 
 if __name__ == "__main__":
