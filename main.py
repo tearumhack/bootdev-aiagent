@@ -50,37 +50,48 @@ def main():
             "content": args.user_prompt,
         },
     ]
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-        tools=available_functions,  # type: ignore
-    )
 
-    if response.usage is None:
-        raise RuntimeError("Chat request failed: 'usage' is 'None'")
+    for _ in range(20):
+        response = client.chat.completions.create(
+            model="openrouter/free",
+            messages=messages,
+            tools=available_functions,  # type: ignore
+        )
 
-    if args.verbose:
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
-        print("User prompt:")
-        print(format_text(args.user_prompt))
+        if response.usage is None:
+            raise RuntimeError("Chat request failed: 'usage' is 'None'")
 
-    message = response.choices[0].message
-    if message.tool_calls is not None:
-        for tool_call in message.tool_calls:
-            result_message = call_function(tool_call, args.verbose)  # type: ignore
-            if result_message.get("content", None) is None:  # type: ignore
-                raise Exception("Tool call received, but message content is not None.")
+        if args.verbose:
+            print(f"Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"Response tokens: {response.usage.completion_tokens}")
+            print("User prompt:")
+            print(format_text(args.user_prompt))
 
-            if args.verbose:
-                print(f"-> {result_message['content']}")
+        message = response.choices[0].message
+        messages.append(message)
 
-    else:
-        if response.choices[0].message.content is None:
-            print("Response empty!")
+        if message.tool_calls is not None:
+            for tool_call in message.tool_calls:
+                result_message = call_function(tool_call, args.verbose)  # type: ignore
+                if result_message.get("content", None) is None:  # type: ignore
+                    raise Exception("Tool call received, but message content is not None.")
+
+                if args.verbose:
+                    print(f"-> {result_message['content']}")
+
+                messages.append(result_message)
+
         else:
-            print("Response:")
-            print(format_text(response.choices[0].message.content))
+            if response.choices[0].message.content is None:
+                print("Response empty!")
+                return 1
+            else:
+                print("Response:")
+                print(format_text(response.choices[0].message.content))
+                return 0
+
+    print("Max number of attempts reached without getting final answer")
+    return 1
 
 
 if __name__ == "__main__":
