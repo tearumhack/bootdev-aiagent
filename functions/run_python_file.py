@@ -1,6 +1,28 @@
 import os
 import subprocess
 
+schema_run_python_file = {  # pyright: ignore[reportUnknownVariableType]
+    "type": "function",
+    "function": {
+        "name": "run_python_file",
+        "description": "Runs the specified python file in the python interpreter.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to a python file to execute, relative to the "
+                    + "working directory (default is the working directory itself)",
+                },
+                "args": {
+                    "type": "list[str]",
+                    "description": "Arguments to provide to the executed python script",
+                },
+            },
+        },
+    },
+}
+
 
 def run_python_file(
     working_directory: str, file_path: str, args: list[str] | None = None

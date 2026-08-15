@@ -1,5 +1,27 @@
 import os
 
+schema_write_file = {  # pyright: ignore[reportUnknownVariableType]
+    "type": "function",
+    "function": {
+        "name": "write_file",
+        "description": "Writes specified content to a specified file.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to a file to write to, relative to the "
+                    + "working directory (default is the working directory itself)",
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Content to write to the file.",
+                },
+            },
+        },
+    },
+}
+
 
 def write_file(working_directory: str, file_path: str, content: str) -> str:
     try:

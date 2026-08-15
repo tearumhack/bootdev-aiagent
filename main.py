@@ -2,7 +2,9 @@ import argparse
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from prompts import system_prompt
 from typing import Any
+from call_function import available_functions, call_function  # type: ignore
 
 load_dotenv()
 api_key: str | None = os.environ.get("OPENROUTER_API_KEY")
@@ -42,13 +44,16 @@ def main():
         api_key=api_key,
     )
     messages: list[Any] = [
+        {"role": "system", "content": system_prompt},
         {
             "role": "user",
             "content": args.user_prompt,
-        }
+        },
     ]
     response = client.chat.completions.create(
-        model="openrouter/free", messages=messages
+        model="openrouter/free",
+        messages=messages,
+        tools=available_functions,  # type: ignore
     )
 
     if response.usage is None:
@@ -60,11 +65,22 @@ def main():
         print("User prompt:")
         print(format_text(args.user_prompt))
 
-    if response.choices[0].message.content is None:
-        print("Response empty!")
+    message = response.choices[0].message
+    if message.tool_calls is not None:
+        for tool_call in message.tool_calls:
+            result_message = call_function(tool_call, args.verbose)  # type: ignore
+            if result_message.get("content", None) is None:  # type: ignore
+                raise Exception("Tool call received, but message content is not None.")
+
+            if args.verbose:
+                print(f"-> {result_message['content']}")
+
     else:
-        print("Response:")
-        print(format_text(response.choices[0].message.content))
+        if response.choices[0].message.content is None:
+            print("Response empty!")
+        else:
+            print("Response:")
+            print(format_text(response.choices[0].message.content))
 
 
 if __name__ == "__main__":
